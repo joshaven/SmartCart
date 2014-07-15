@@ -1,16 +1,20 @@
 /*
  * SmartCart 2.0 plugin
  * jQuery Shopping Cart Plugin
- * by Dipu 
- * 
- * http://www.techlaboratory.net 
+ * by Dipu
+ *
+ * http://www.techlaboratory.net
  * http://tech-laboratory.blogspot.com
  */
- 
+/*jslint nomen:true white:true vars:true*/
+/*global window, $, _, jQuery, Backbone, APP, console*/
+
+
 (function($){
+  // 'use strict';
     $.fn.smartCart = function(options) {
-        var options = $.extend({}, $.fn.smartCart.defaults, options);
-                
+        options = $.extend({}, $.fn.smartCart.defaults, options);
+
         return this.each(function() {
                 var obj = $(this);
                 // retrive all products
@@ -18,18 +22,18 @@
                 var resultName = options.resultName;
                 var cartItemCount = 0;
                 var cartProductCount = 0; // count of unique products added
-                var subTotal = 0; 
+                var subTotal = 0;
                 var toolMaxImageHeight = 200;
-                
+
                 // Attribute Settings
                 // You can assign the same you have given on the hidden elements
                 var attrProductId = "pid";  // Product Id attribute
-                var attrProductName = "pname"; // Product Name attribute   
-                var attrProductPrice = "pprice"; // Product Price attribute  
+                var attrProductName = "pname"; // Product Name attribute
+                var attrProductPrice = "pprice"; // Product Price attribute
                 var attrProductImage = "pimage"; // Product Image attribute
                 var attrCategoryName = "pcategory";
-                
-                // Labels & Messages              
+
+                // Labels & Messages
                 var labelCartMenuName = 'My Cart (_COUNT_)';  // _COUNT_ will be replaced with cart count
                 var labelCartMenuNameTooltip = "Cart | Total Products: _PRODUCTCOUNT_ | Total Quantity: _ITEMCOUNT_";
                 var labelProductMenuName = 'Products';
@@ -37,7 +41,7 @@
                 var labelSearchText = "Search";
                 var labelCategoryText = "Category";
                 var labelClearButton = "Clear";
-                var labelAddToCartButton = "Add to Cart"; 
+                var labelAddToCartButton = "Add to Cart";
                 var labelQuantityText = "Quantity";
                 var labelProducts = 'Products';
                 var labelPrice = 'Price';
@@ -45,7 +49,7 @@
                 var labelTotal = 'Total';
                 var labelRemove = 'Remove';
                 var labelCheckout = 'Checkout';
-                
+
                 var messageConfirmRemove = 'Do you want to remove "_PRODUCTNAME_" from cart?'; //  _PRODUCTNAME_ will be replaced with actula product name
                 var messageCartEmpty = "Your cart is empty";
                 var messageProductEmpty = "No products to display";
@@ -55,57 +59,57 @@
                 var messageQuantityUpdated = 'Product quantity updated';
                 var messageQuantityErrorAdd = 'Invalid quantity. Product cannot add';
                 var messageQuantityErrorUpdate = 'Invalid quantity. Quantity cannot update';
-                
+
                 //Create Main Menu
-                cartMenu = labelCartMenuName.replace('_COUNT_','0'); // display default
+                var cartMenu = labelCartMenuName.replace('_COUNT_','0'); // display default
                 var btShowCart = $('<a>'+cartMenu+'</a>').attr("href","#scart");
                 var btShowProductList = $('<a>'+labelProductMenuName+'</a>').attr("href","#sproducts");
                 var msgBox2 = $('<div></div>').addClass("scMessageBar2").hide();
-                
+
                 var elmProductMenu = $("<li></li>").append(btShowProductList);
                 var elmCartMenu = $("<li></li>").append(btShowCart);
                 var elmMsgBox = $("<li></li>").append(msgBox2);
                 var elmMenuBar = $('<ul></ul>').addClass("scMenuBar").append(elmProductMenu).append(elmCartMenu).append(elmMsgBox);
                 obj.prepend(elmMenuBar);
-                
+
                 // Create Search Elements
                 var elmPLSearchPanel = $('<div></div>').addClass("scSearchPanel");
                 if(options.enableSearch){
-                  var btSearch = $('<a>'+labelSearchButton+'</a>').attr("href","#").addClass("scSearch").attr("title","Search Product");                
+                  var btSearch = $('<a>'+labelSearchButton+'</a>').attr("href","#").addClass("scSearch").attr("title","Search Product");
                   $(btSearch).click(function() {
-                     var searcStr = $(txtSearch).val();                      
+                     var searcStr = $(txtSearch).val();
                      populateProducts(searcStr);
                      return false;
-                  }); 
+                  });
                   var btClear = $('<a>'+labelClearButton+'</a>').attr("href","#").addClass("scSearch").attr("title","Clear Search");
                   $(btClear).click(function() {
-                     $(txtSearch).val('');                      
+                     $(txtSearch).val('');
                      populateProducts('');
                      return false;
                   });
-                  var txtSearch = $('<input type="text" />').attr("value","").addClass("scTxtSearch")
+                  var txtSearch = $('<input type="text" />').attr("value","").addClass("scTxtSearch");
                   $(txtSearch).keyup(function() {
-                     var searcStr = $(this).val();                      
+                     var searcStr = $(this).val();
                      populateProducts(searcStr);
-                  });  
-                  var lblSearch = $('<label>'+labelSearchText+':</label>').addClass("scLabelSearch");                                                 
-                  elmPLSearchPanel.append(lblSearch).append(txtSearch).append(btSearch).append(btClear);                
+                  });
+                  var lblSearch = $('<label>'+labelSearchText+':</label>').addClass("scLabelSearch");
+                  elmPLSearchPanel.append(lblSearch).append(txtSearch).append(btSearch).append(btClear);
                 }
                 // Create Category filter
                 if(options.enableCategoryFilter){
                   var lblCategory = $('<label>'+labelCategoryText+':</label>').addClass("scLabelCategory");
-                  var elmCategory = $("<select></select>").addClass("scSelCategory");                
-                  elmPLSearchPanel.append(lblCategory).append(elmCategory);                
+                  var elmCategory = $("<select></select>").addClass("scSelCategory");
+                  elmPLSearchPanel.append(lblCategory).append(elmCategory);
                   fillCategory();
                 }
 
-                // Create Product List                
+                // Create Product List
                 var elmPLContainer = $('<div></div>').addClass("scTabs").hide();
                 elmPLContainer.prepend(elmPLSearchPanel);
-                
+
                 var elmPLProducts = $('<div></div>').addClass("scProductList");
                 elmPLContainer.append(elmPLProducts);
-                
+
                 // Create Cart
                 var elmCartContainer = $('<div></div>').addClass("scTabs").hide();
                 var elmCartHeader = $('<div></div>').addClass("scCartHeader");
@@ -115,79 +119,79 @@
                 var elmCartHeaderTitle4 = $('<label>'+labelSubtotal+'</label>').addClass("scCartTitle scCartTitle4");
                 var elmCartHeaderTitle5 = $('<label></label>').addClass("scCartTitle scCartTitle5");
                 elmCartHeader.append(elmCartHeaderTitle1).append(elmCartHeaderTitle2).append(elmCartHeaderTitle3).append(elmCartHeaderTitle4).append(elmCartHeaderTitle5);
-                
+
                 var elmCartList = $('<div></div>').addClass("scCartList");
                 elmCartContainer.append(elmCartHeader).append(elmCartList);
-                
+
                 obj.append(elmPLContainer).append(elmCartContainer);
-                
+
                 // Create Bottom bar
                 var elmBottomBar = $('<div></div>').addClass("scBottomBar");
                 var elmBottomSubtotalText = $('<label>'+labelTotal+':</label>').addClass("scLabelSubtotalText");
                 var elmBottomSubtotalValue = $('<label>'+getMoneyFormatted(subTotal)+'</label>').addClass("scLabelSubtotalValue");
-                var btCheckout = $('<a>'+labelCheckout+'</a>').attr("href","#").addClass("scCheckoutButton");                
+                var btCheckout = $('<a>'+labelCheckout+'</a>').attr("href","#").addClass("scCheckoutButton");
                 $(btCheckout).click(function() {
                    if($.isFunction(options.onCheckout)) {
                       // calling onCheckout event;
                       options.onCheckout.call(this,elmProductSelected);
                    }else{
-                      $(this).parents("form").submit();                   
+                      $(this).parents("form").submit();
                    }
                    return false;
                 });
                 elmBottomBar.append(btCheckout).append(elmBottomSubtotalValue).append(elmBottomSubtotalText);
                 obj.append(elmBottomBar);
-                
+
                 // Create Tooltip
                 var tooltip = $('<div></div>').addClass('tooltip').hide();
                 obj.append(tooltip);
                 obj.bind("mousemove",function(){
-              		tooltip.hide();                    
+              		tooltip.hide();
                   return true;
-              	});                
-                
-                // Create SelectList                                
+              	});
+
+                // Create SelectList
                 var elmProductSelected = $('select[name="'+resultName+'"]',obj);
                 if(elmProductSelected.length <= 0){
                    elmProductSelected = $("<select></select>").attr("name",resultName).attr("multiple","multiple").hide();
                    refreshCartValues();
-                }else{ 
+                }else{
                    elmProductSelected.attr("multiple","multiple").hide();
-                   populateCart(); // pre-populate cart if there are selected items  
-                }                 
+                   populateCart(); // pre-populate cart if there are selected items
+                }
                 obj.append(elmProductSelected);
-                
+
                 // prepare the product list
                 populateProducts();
-                
-                if(options.selected == '1'){
+
+                if(options.selected === '1'){
                    showCart();
                 }else{
                    showProductList();
-                }	       
+                }
 
                 $(btShowProductList).bind("click", function(e){
                     showProductList();
                     return false;
-                }); 
+                });
                 $(btShowCart).bind("click", function(e){
                     showCart();
                     return false;
                 });
 
-                function showCart(){  
+                function showCart(){
                      $(btShowProductList).removeClass("sel");
                      $(btShowCart).addClass("sel");
                      $(elmPLContainer).hide();
                      $(elmCartContainer).show();
                 }
-                function showProductList(){ 
+                function showProductList(){
                      $(btShowProductList).addClass("sel");
-                     $(btShowCart).removeClass("sel");  
+                     $(btShowCart).removeClass("sel");
                      $(elmCartContainer).hide();
                      $(elmPLContainer).show();
                 }
-                
+
                 function addToCart(i,qty){
                      var addProduct = products.eq(i);
                      if(addProduct.length > 0){
@@ -212,13 +216,13 @@
                             var prdQty = valueArray[1];
                             prdQty = (prdQty-0) +  (qty-0);
                             var newPValue =  prdId + '|' + prdQty;
-                            productItem.attr("value",newPValue).attr('selected', true);    
+                            productItem.attr("value",newPValue).attr('selected', true);
                             var prdTotal = getMoneyFormatted(pPrice * prdQty);
                             // Now go for updating the design
                             var lalQuantity =  $('#lblQuantity'+i).val(prdQty);
                             var lblTotal =  $('#lblTotal'+i).html(prdTotal);
                             // show product quantity updated message
-                            showHighlightMessage(messageQuantityUpdated);                                                      
+                            showHighlightMessage(messageQuantityUpdated);
                         }else{
                             // This is a new item so create the list
                             var prodStr = pId + '|' + qty;
@@ -226,7 +230,7 @@
                             elmProductSelected.append(productItem);
                             addCartItemDisplay(addProduct,qty);
                             // show product added message
-                            showHighlightMessage(messageItemAdded);                            
+                            showHighlightMessage(messageItemAdded);
                         }
                         // refresh the cart
                         refreshCartValues();
@@ -238,7 +242,7 @@
                         showHighlightMessage(messageProductAddError);
                      }
                 }
-                
+
                 function addCartItemDisplay(objProd,Quantity){
                     var pId = $(objProd).attr(attrProductId);
                     var pIndex = products.index(objProd);
@@ -248,15 +252,15 @@
                     var pTotal = (pPrice - 0) * (Quantity - 0);
                     pTotal = getMoneyFormatted(pTotal);
                     // Now Go for creating the design stuff
-                    
+
                     $('.scMessageBar',elmCartList).remove();
-                    
-                    var elmCPTitle1 = $('<div></div>').addClass("scCartItemTitle scCartItemTitle1");                            
+
+                    var elmCPTitle1 = $('<div></div>').addClass("scCartItemTitle scCartItemTitle1");
                     if(prodImgSrc && options.enableImage && prodImgSrc.length>0){
                         var prodImg = $("<img></img>").attr("src",prodImgSrc).addClass("scProductImageSmall");
                         if(prodImg && options.enableImageTooltip){
                           	prodImg.bind("mouseenter mousemove",function(){
-                                showTooltip($(this));                    
+                                showTooltip($(this));
                               return false;
                           	});
                           	prodImg.bind("mouseleave",function (){
@@ -267,13 +271,13 @@
                         elmCPTitle1.append(prodImg);
                     }
                     var elmCP = $('<div></div>').attr("id","divCartItem"+pIndex).addClass("scCartItem");
-  
+
                     var pTitle =  pName;
                     var phtml = formatTemplate(options.cartItemTemplate, $(objProd));
-                    var elmCPContent = $('<div></div>').html(phtml).attr("title",pTitle);                        
-                    elmCPTitle1.append(elmCPContent);                        
+                    var elmCPContent = $('<div></div>').html(phtml).attr("title",pTitle);
+                    elmCPTitle1.append(elmCPContent);
                     var elmCPTitle2 = $('<label>'+pPrice+'</label>').addClass("scCartItemTitle scCartItemTitle2");
-                    var inputQty = $('<input type="text" value="'+Quantity+'" />').attr("id","lblQuantity"+pIndex).attr("rel",pIndex).addClass("scTxtQuantity2");                    
+                    var inputQty = $('<input type="text" value="'+Quantity+'" />').attr("id","lblQuantity"+pIndex).attr("rel",pIndex).addClass("scTxtQuantity2");
                     $(inputQty).bind("change", function(e){
                         var newQty = $(this).val();
                         var prodIdx = $(this).attr("rel");
@@ -283,14 +287,14 @@
                         }else{
                           var productItem = elmProductSelected.children("option[rel=" + prodIdx + "]");
                           var pValue = $(productItem).attr("value");
-                          var valueArray = pValue.split('|'); 
+                          var valueArray = pValue.split('|');
                           var pQty = valueArray[1];
-                          $(this).val(pQty);                                                 
+                          $(this).val(pQty);
                           showHighlightMessage(messageQuantityErrorUpdate);
                         }
                         return true;
                     });
-                    
+
                     var elmCPTitle3 = $('<div></div>').append(inputQty).addClass("scCartItemTitle scCartItemTitle3");
 
                     var elmCPTitle4 = $('<label>'+pTotal+'</label>').attr("id","lblTotal"+pIndex).addClass("scCartItemTitle scCartItemTitle4");
@@ -302,12 +306,12 @@
                     });
                     var elmCPTitle5 = $('<div></div>').addClass("scCartItemTitle scCartItemTitle5");
                     elmCPTitle5.append(btRemove);
-                    
+
                     elmCPTitle1.append(elmCPContent);
                     elmCP.append(elmCPTitle1).append(elmCPTitle2).append(elmCPTitle3).append(elmCPTitle4).append(elmCPTitle5);
                     elmCartList.append(elmCP);
                 }
-                
+
                 function removeFromCart(idx){
                     var pObj = products.eq(idx);
                     var pName = $(pObj).attr(attrProductName)
@@ -335,7 +339,7 @@
                         }
                     }
                 }
-                
+
                 function updateCartQuantity(idx,qty){
                     var pObj = products.eq(idx);
                     var productItem = elmProductSelected.children("option[rel=" + idx + "]");
@@ -343,7 +347,7 @@
                     var pValue = $(productItem).attr("value");
                     var valueArray = pValue.split('|');
                     var prdId = valueArray[0];
-                    var curQty = valueArray[1];                    
+                    var curQty = valueArray[1];
                     if($.isFunction(options.onUpdate)) {
                         // calling onUpdate event; expecting a return value
                         // will start Update if returned true and cancel Update if returned false
@@ -355,26 +359,26 @@
 
 
                     var newPValue =  prdId + '|' + qty;
-                    $(productItem).attr("value",newPValue).attr('selected', true);    
+                    $(productItem).attr("value",newPValue).attr('selected', true);
                     var prdTotal = getMoneyFormatted(pPrice * qty);
                         // Now go for updating the design
-                    var lblTotal =  $('#lblTotal'+idx).html(prdTotal); 
+                    var lblTotal =  $('#lblTotal'+idx).html(prdTotal);
                     showHighlightMessage(messageQuantityUpdated);
                     //Refresh the cart
                     refreshCartValues();
                     if($.isFunction(options.onUpdated)){
                         // calling onUpdated event; not expecting a return value
                         options.onUpdated.call(this,$(pObj),qty);
-                    }                    
+                    }
                 }
-                
+
                 function refreshCartValues(){
                     var sTotal = 0;
                     var cProductCount = 0;
                     var cItemCount = 0;
                     elmProductSelected.children("option").each(function(n) {
-                        var pIdx = $(this).attr("rel"); 
-                        var pObj = products.eq(pIdx);                     
+                        var pIdx = $(this).attr("rel");
+                        var pObj = products.eq(pIdx);
                         var pValue = $(this).attr("value");
                         var valueArray = pValue.split('|');
                         var prdId = valueArray[0];
@@ -388,17 +392,17 @@
                     cartProductCount = cProductCount;
                     cartItemCount = cItemCount;
                     elmBottomSubtotalValue.html(getMoneyFormatted(subTotal));
-                    cartMenu = labelCartMenuName.replace('_COUNT_',cartProductCount);  
+                    cartMenu = labelCartMenuName.replace('_COUNT_',cartProductCount);
                     cartMenuTooltip = labelCartMenuNameTooltip.replace('_PRODUCTCOUNT_',cartProductCount).replace('_ITEMCOUNT_',cartItemCount);
                     btShowCart.html(cartMenu).attr("title",cartMenuTooltip);
-                    
+
                     if(cProductCount <= 0){
                        showMessage(messageCartEmpty,elmCartList);
                     }else{
                        $('.scMessageBar',elmCartList).remove();
                     }
                 }
-                
+
                 function populateCart(){
                    elmProductSelected.children("option").each(function(n) {
                         var curPValue =  $(this).attr("value");
@@ -408,23 +412,23 @@
                         if(!prdQty){
                           prdQty = 1; // if product quantity is not present default to 1
                         }
-                        var objProd = jQuery.grep(products, function(n, i){return ($(n).attr(attrProductId) == prdId);});                        
+                        var objProd = jQuery.grep(products, function(n, i){return ($(n).attr(attrProductId) == prdId);});
                         var prodIndex = products.index(objProd[0]);
                         var prodName = $(objProd[0]).attr(attrProductName);
                         $(this).attr('selected', true);
                         $(this).attr('rel', prodIndex);
                         $(this).html(prodName);
-                        cartItemCount++; 
-                        addCartItemDisplay(objProd[0],prdQty);                         
+                        cartItemCount++;
+                        addCartItemDisplay(objProd[0],prdQty);
                    });
                    // Reresh the cart
                    refreshCartValues();
                 }
-                
+
                 function fillCategory(){
                    var catCount = 0;
                    var catItem = $('<option></option>').attr("value",'').attr('selected', true).html('All');
-                   elmCategory.prepend(catItem);                   
+                   elmCategory.prepend(catItem);
                    $(products).each(function(i,n){
                         var pCategory = $(this).attr(attrCategoryName);
                         if(pCategory && pCategory.length>0){
@@ -433,23 +437,23 @@
                             catCount++;
                             var catItem = $('<option></option>').attr("value",pCategory).html(pCategory);
                             elmCategory.append(catItem);
-                          }                        
+                          }
                         }
-                            
+
                    });
                    if(catCount>0){
                       $(elmCategory).bind("change", function(e){
                         $(txtSearch).val('');
                         populateProducts();
                         return true;
-                    });                      
+                    });
                    }else{
                       elmCategory.hide();
                       lblCategory.hide();
                    }
                 }
-                
-                
+
+
                 function populateProducts(searchString){
                    var isSearch = false;
                    var productCount = 0;
@@ -460,7 +464,7 @@
                      if(searchString.length>0){
                          isSearch = true;
                          searchString = searchString.toLowerCase();
-                     }                      
+                     }
                    }
                    // Clear the current items on product list
                    elmPLProducts.html('');
@@ -488,16 +492,16 @@
                       }
 
                       if(isValid && isCategoryValid) {
-                          productCount++; 
-                          var productPrice = $(this).attr(attrProductPrice); 
+                          productCount++;
+                          var productPrice = $(this).attr(attrProductPrice);
                           var prodImgSrc = $(this).attr(attrProductImage);
-                          
+
                           var elmProdDiv1 = $('<div></div>').addClass("scPDiv1");
                           if(prodImgSrc && options.enableImage && prodImgSrc.length>0){
-                              var prodImg = $("<img></img>").attr("src",prodImgSrc).addClass("scProductImage");                      
+                              var prodImg = $("<img></img>").attr("src",prodImgSrc).addClass("scProductImage");
                               if(prodImg && options.enableImageTooltip){
                               	prodImg.bind("mouseenter mousemove",function(){
-                                    showTooltip($(this));                    
+                                    showTooltip($(this));
                                   return false;
                               	});
                               	prodImg.bind("mouseleave",function (){
@@ -509,9 +513,9 @@
                           }
                           var elmProdDiv2 = $('<div></div>').addClass("scPDiv2"); // for product name, desc & price
                           var productHtml = formatTemplate(options.productItemTemplate, $(this));
-                          elmProdDiv2.html(productHtml);                      
-                          
-                          var elmProdDiv3 = $('<div></div>').addClass("scPDiv3"); // for button & qty    
+                          elmProdDiv2.html(productHtml);
+
+                          var elmProdDiv3 = $('<div></div>').addClass("scPDiv3"); // for button & qty
                           var btAddToCart = $('<a>'+labelAddToCartButton+'</a>').attr("href","#").attr("rel",i).attr("title",labelAddToCartButton).addClass("scAddToCart");
                           $(btAddToCart).bind("click", function(e){
                               var idx = $(this).attr("rel");
@@ -519,42 +523,42 @@
                               if(validateNumber(qty)){
                                  addToCart(idx,qty);
                               }else{
-                                $(this).siblings("input").val(1);                                                 
+                                $(this).siblings("input").val(1);
                                 showHighlightMessage(messageQuantityErrorAdd);
                               }
                               return false;
                           });
-                          var inputQty = $('<input type="text" value="1" />').addClass("scTxtQuantity");  
-                          var labelQty = $('<label>'+labelQuantityText+':</label>').addClass("scLabelQuantity");                    
-                          elmProdDiv3.append(labelQty).append(inputQty).append(btAddToCart);                  
-    
+                          var inputQty = $('<input type="text" value="1" />').addClass("scTxtQuantity");
+                          var labelQty = $('<label>'+labelQuantityText+':</label>').addClass("scLabelQuantity");
+                          elmProdDiv3.append(labelQty).append(inputQty).append(btAddToCart);
+
                           var elmProds = $('<div></div>').addClass("scProducts");
-    
+
                           elmProds.append(elmProdDiv1).append(elmProdDiv2).append(elmProdDiv3);
                           elmPLProducts.append(elmProds);
-                      }                                                        
+                      }
                    });
-                   
+
                    if(productCount <= 0){
                        showMessage(messageProductEmpty,elmPLProducts);
                    }
                 }
-                
+
                 // Display message
                 function showMessage(msg, elm){
                   var elmMessage = $('<div></div>').addClass("scMessageBar").hide();
-                  elmMessage.html(msg);                  
+                  elmMessage.html(msg);
                   if(elm){
                      elm.append(elmMessage);
                      elmMessage.show();
                   }
                 }
-                
+
                 function showHighlightMessage(msg){
                   msgBox2.html(msg);
           				msgBox2.fadeIn("fast", function() {
-          					setTimeout(function() { msgBox2.fadeOut("fast"); }, 2000); 
-          				}); 
+          					setTimeout(function() { msgBox2.fadeOut("fast"); }, 2000);
+          				});
                 }
 
                 // Show Image tooltip
@@ -562,19 +566,19 @@
             		  var height = img.height();
             		  var width = img.height();
                   var imgOffsetTop = img.offset().top;
-                  jQuery.log(img.offset());                
+                  jQuery.log(img.offset());
                   jQuery.log(img.position());
                   jQuery.log("--------------");
                   tooltip.html('');
-                  var tImage = $("<img></img>").attr('src',$(img).attr('src')); 
+                  var tImage = $("<img></img>").attr('src',$(img).attr('src'));
                   tImage.height(toolMaxImageHeight);
                   tooltip.append(tImage);
               		var top = imgOffsetTop - height ;
               		var left = width + 10;
-                  tooltip.css({'top':top, 'left':left});	
-                  tooltip.show("fast");                                              
+                  tooltip.css({'top':top, 'left':left});
+                  tooltip.show("fast");
                 }
-                
+
                 function validateNumber(num){
                   var ret = false;
                   if(num){
@@ -585,7 +589,7 @@
                   }
                   return ret;
                 }
-                
+
                 // Get the money formatted for display
                 function getMoneyFormatted(val){
                   return val.toFixed(2);
@@ -605,9 +609,9 @@
                   var finalStr = '';
                   for(i=0;i<resStr.length;i++){
                     var tmpStr = resStr[i];
-                    valRef = tmpStr.substring(0, tmpStr.indexOf("%>")); 
+                    valRef = tmpStr.substring(0, tmpStr.indexOf("%>"));
                     if(valRef!='' || valRef!=null){
-                      var valRep = objItem.attr(valRef); //n[valRef]; 
+                      var valRep = objItem.attr(valRef); //n[valRef];
                       if(valRep == null || valRep == 'undefined'){
                          valRep = '';
                       }
@@ -620,13 +624,13 @@
                   return finalStr;
                 }
 
-        });  
-    };  
- 
+        });
+    };
+
     // Default options
     $.fn.smartCart.defaults = {
-          selected: 0,  // 0 = produts list, 1 = cart   
-          resultName: 'products_selected[]', 
+          selected: 0,  // 0 = produts list, 1 = cart
+          resultName: 'products_selected[]',
           enableImage: true,
           enableImageTooltip: true,
           enableSearch: true,
@@ -637,16 +641,16 @@
           onAdd: null,      // function(pObj,quantity){ return true; }
           onAdded: null,    // function(pObj,quantity){ }
           onRemove: null,   // function(pObj){return true;}
-          onRemoved: null,  // function(pObj){ } 
+          onRemoved: null,  // function(pObj){ }
           onUpdate: null,   // function(pObj,quantity){ return true; }
-          onUpdated: null,  // function(pObj,quantity){ } 
-          onCheckout: null  // function(Obj){ } 
+          onUpdated: null,  // function(pObj,quantity){ }
+          onCheckout: null  // function(Obj){ }
     };
-    
+
     jQuery.log = function(message) {
       if(window.console) {
          console.debug(message);
       }
     };
-    
+
 })(jQuery);
